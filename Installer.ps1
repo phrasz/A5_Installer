@@ -18,14 +18,16 @@ Write-Host ================================
 Write-Host V 1.0 by Phrasz
 
 Write-Host [$NCurrent/$N] Making Directory: $pwd\Allegro5.1
-echo "Hi" > Temp.txt
-$source = "Temp.txt"
+
 $Folder = "Allegro5.1"
 $destination = "$pwd\$Folder"
-#mkdir -p Allegro5.1 | out-null
-Copy-Item -Path $source -Destination $destination -Filter {$_.PSIsContainer} -Recurse -Force
+# if folder does not exist...
+if (!(Test-Path $destination)) {
+	# create it
+	[void](new-item $folder -itemType directory)
+}
 cd $Folder | out-null
-del $source
+
 
 Write-Host
 $NCurrent += 1
@@ -101,5 +103,15 @@ if($result -eq 1) {
 
 Write-Host
 $NCurrent += 1
+
+$F2 = "A5_Deps"
+Write-Host [$NCurrent/$N] Making Directory: .\$F2
+$dest2 = ".\$F2"
+# if folder does not exist...
+if (!(Test-Path $dest2)) {
+	# create it
+	[void](new-item $F2 -itemType directory)
+}
+cd $F2 | out-null
 
 Write-Host Finished Installation!
