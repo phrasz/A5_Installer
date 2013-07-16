@@ -142,36 +142,42 @@ $NCurrent += 1
 	
 	####################################
 	#    1) Zlib
-	$Zlib = "Zlib"
-	Write-Host [$NCurrent/$N] Making Directory: .\$Zlib
-	$DestZlib = ".\$Zlib"
-	# if folder does not exist...
-	if (!(Test-Path $DestZlib)) {
-		# create it
-		[void](new-item $Zlib -itemType directory)
+	$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to build Zlib? [DEBUGGING]","",$choices,0)
+	if($result -eq 0){
+		$Zlib = "Zlib"
+		Write-Host [$NCurrent/$N] Making Directory: .\$Zlib
+		$DestZlib = ".\$Zlib"
+		# if folder does not exist...
+		if (!(Test-Path $DestZlib)) {
+			# create it
+			[void](new-item $Zlib -itemType directory)
+		}
+		cd $Zlib | out-null
+		
+		(New-Object System.Net.WebClient).DownloadFile("http://zlib.net/zlib128.zip","Zlib_src.zip")
+
+		Write-Host
+
+		Write-Host "[$NCurrent/$N] Extracting + Building the source..."
+		move $env:HOMEDRIVE$env:HOMEPATH\Zlib_src.zip .
+		unzip -q Zlib_src.zip
+		del Zlib_src.zip
+		cd zlib-1.2.8
+		mkdir build
+		cd build
+		
+		$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"$env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\A5_Deps`" ..\"
+		Write-Output $t1 | Out-File -encoding ASCII .\zlibcmd.bat -width 200
+		& cmd.exe /k "cls && echo Building the Zlib source pt 1/2 && echo ================================= && echo Please type 'exit', and press enter, when this completes! && echo. && echo Right click, and press enter to continue... && echo (try twice b/c windows is HALF as awesome as Linux) && clip<zlibcmd.bat"
+		
+		Write-Host "[$NCurrent/$N] Builing the Zlib source pt 2/2 ..."
+
+		\bin\mingw32-make.exe install
+		cd ..\..\..\
 	}
-	cd $Zlib | out-null
-	
-	(New-Object System.Net.WebClient).DownloadFile("http://zlib.net/zlib128.zip","Zlib_src.zip")
-
-	Write-Host
-
-	Write-Host "[$NCurrent/$N] Extracting + Building the source..."
-	move $env:HOMEDRIVE$env:HOMEPATH\Zlib_src.zip .
-	unzip -q Zlib_src.zip
-	del Zlib_src.zip
-	cd zlib-1.2.8
-	mkdir build
-	cd build
-	
-	$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"$env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\A5_Deps`" ..\"
-	Write-Output $t1 | Out-File -encoding ASCII .\zlibcmd.bat -width 200
-	& cmd.exe /k "cls && echo Building the Zlib source pt 1/2 && echo ================================= && echo Please type 'exit', and press enter, when this completes! && echo. && echo Right click, and press enter to continue... && echo (try twice b/c windows is HALF as awesome as Linux) && clip<zlibcmd.bat"
-	
-	Write-Host "[$NCurrent/$N] Builing the Zlib source pt 2/2 ..."
-
-	& $env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\MinGW\bin\mingw32-make.exe install
-	cd ..\..\..\
+	if($result -eq 1) { 
+		Write-Host "[$NCurrent/$N] Skipping MsysGit Installation" 
+	}
 	####################################
 
 	Write-Host
@@ -179,6 +185,48 @@ $NCurrent += 1
 
 	####################################
 	#    2) Ogg
+	$Ogg = "Ogg"
+	Write-Host [$NCurrent/$N] Making Directory: .\$Ogg
+	$DestOgg = ".\$Ogg"
+	# if folder does not exist...
+	if (!(Test-Path $DestOgg)){
+		# create it
+		[void](new-item $Ogg -itemType directory)
+	}
+	cd $Ogg | out-null
+	
+	(New-Object System.Net.WebClient).DownloadFile("http://downloads.xiph.org/releases/ogg/libogg-1.3.1.zip","Ogg_src.zip")
+
+	Write-Host
+
+	Write-Host "[$NCurrent/$N] Extracting + Building the source..."
+	move $env:HOMEDRIVE$env:HOMEPATH\Ogg_src.zip .
+	
+	unzip -q Ogg_src.zip
+	del Ogg_src.zip
+	cd libogg-1.3.1
+	$t1="#!/bin/sh"
+	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200
+	$t1="./configure --prefix=`"$HOME/Allegro5.1/A5_Deps`""
+	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
+	$t1="make"
+	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
+	$t1="make install"
+	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
+	
+	$Sh = "profile.d"
+	Write-Host [$NCurrent/$N] Making Directory: .\$Sh
+	$DestSh = ".\.$Sh"
+	# if folder does not exist...
+	if (!(Test-Path $DestSh)){
+		# create it
+		[void](new-item $Sh -itemType directory)
+	}
+	move oggcmd.sh .\.profile.d
+	
+	#& msys --login
+	
+	
 	####################################
 
 	Write-Host
