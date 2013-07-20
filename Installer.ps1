@@ -37,13 +37,18 @@ $NCurrent += 1
 	$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to install MinGW?","",$choices,0)
 	if($result -eq 0){
 		Write-Host [$NCurrent/$N] Downloading the Latest MinGW from Sourceforge
-		(New-Object System.Net.WebClient).DownloadFile("http://downloads.sourceforge.net/project/mingw/Installer/mingw-get-inst/mingw-get-inst-20120426/mingw-get-inst-20120426.exe?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fmingw%2Ffiles%2FInstaller%2Fmingw-get-inst%2Fmingw-get-inst-20120426%2F&ts=1373595137&use_mirror=hivelocity","MinGW_Latest_Installer.exe")
+		(New-Object System.Net.WebClient).DownloadFile("http://downloads.sourceforge.net/project/mingw/Installer/mingw-get-inst/mingw-get-inst-20120426/mingw-get-inst-20120426.exe?r=&ts=1374192738&use_mirror=hivelocity","$env:HOMEDRIVE$env:HOMEPATH\MinGW_Latest_Installer.exe")
 
 		Write-Host
 
 		Write-Host "[$NCurrent/$N] Starting the Installer (Ensure C:\MinGW install path!)"
-		move $env:HOMEDRIVE$env:HOMEPATH\MinGW_Latest_Installer.exe .
+		Move-Item $env:HOMEDRIVE$env:HOMEPATH\MinGW_Latest_Installer.exe .
 		& .\MinGW_Latest_Installer.exe
+		& sysdm.cpl
+		Write-Host "Add `";C:\MinGW\bin\;C:\MinGW\bin\`" to the System path! "
+		Write-Host "   1) Click the `"Advanced`" Tab on the system properties window"
+		Write-Host "   2) Click `"Environment Variables`""
+		Write-Host "   3) On the bottom half, find PATH in the `"System variables`""
 		Write-Host "     Press any key to continue ..."
 		$x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
 
@@ -61,12 +66,12 @@ $NCurrent += 1
 	$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to install CMake?","",$choices,0)
 	if($result -eq 0){
 		Write-Host [$NCurrent/$N] Downloading the Latest CMake from http://www.cmake.org/
-		(New-Object System.Net.WebClient).DownloadFile("http://www.cmake.org/files/v2.8/cmake-2.8.11.2-win32-x86.exe","CMake_2.8.11.2_Installer.exe")
+		(New-Object System.Net.WebClient).DownloadFile("http://www.cmake.org/files/v2.8/cmake-2.8.11.2-win32-x86.exe","$env:HOMEDRIVE$env:HOMEPATH\CMake_2.8.11.2_Installer.exe")
 
 		Write-Host
 
 		Write-Host "[$NCurrent/$N] Starting the Installer!"
-		move $env:HOMEDRIVE$env:HOMEPATH\CMake_2.8.11.2_Installer.exe .
+		Move-Item $env:HOMEDRIVE$env:HOMEPATH\CMake_2.8.11.2_Installer.exe .
 		& .\CMake_2.8.11.2_Installer.exe
 		Write-Host "     Press any key to continue ..."
 		$x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -84,12 +89,12 @@ $NCurrent += 1
 	$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to install MsysGit?","",$choices,0)
 	if($result -eq 0){
 		Write-Host [$NCurrent/$N] Downloading the Latest MsysGit from https://code.google.com/p/msysgit/
-		(New-Object System.Net.WebClient).DownloadFile("https://msysgit.googlecode.com/files/Git-1.8.3-preview20130601.exe","MsysGit_1.8.3_Installer.exe")
+		(New-Object System.Net.WebClient).DownloadFile("https://msysgit.googlecode.com/files/Git-1.8.3-preview20130601.exe","$env:HOMEDRIVE$env:HOMEPATH\MsysGit_1.8.3_Installer.exe")
 
 		Write-Host
 
 		Write-Host "[$NCurrent/$N] Starting the Installer!"
-		move %HOMEDRIVE%%HOMEPATH%\MsysGit_1.8.3_Installer.exe .
+		Move-Item $env:HOMEDRIVE$env:HOMEPATH\MsysGit_1.8.3_Installer.exe .
 		& .\MsysGit_1.8.3_Installer.exe
 		Write-Host "     Press any key to continue ..."
 		$x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
@@ -142,42 +147,37 @@ $NCurrent += 1
 	
 	####################################
 	#    1) Zlib
-	$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to build Zlib? [DEBUGGING]","",$choices,0)
-	if($result -eq 0){
-		$Zlib = "Zlib"
-		Write-Host [$NCurrent/$N] Making Directory: .\$Zlib
-		$DestZlib = ".\$Zlib"
-		# if folder does not exist...
-		if (!(Test-Path $DestZlib)) {
-			# create it
-			[void](new-item $Zlib -itemType directory)
-		}
-		cd $Zlib | out-null
-		
-		(New-Object System.Net.WebClient).DownloadFile("http://zlib.net/zlib128.zip","Zlib_src.zip")
-
-		Write-Host
-
-		Write-Host "[$NCurrent/$N] Extracting + Building the source..."
-		move $env:HOMEDRIVE$env:HOMEPATH\Zlib_src.zip .
-		unzip -q Zlib_src.zip
-		del Zlib_src.zip
-		cd zlib-1.2.8
-		mkdir build
-		cd build
-		
-		$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"$env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\A5_Deps`" ..\"
-		Write-Output $t1 | Out-File -encoding ASCII .\zlibcmd.bat -width 200
-		& cmd.exe /k "cls && echo Building the Zlib source pt 1/2 && echo ================================= && echo Please type 'exit', and press enter, when this completes! && echo. && echo Right click, and press enter to continue... && echo (try twice b/c windows is HALF as awesome as Linux) && clip<zlibcmd.bat"
-		
-		Write-Host "[$NCurrent/$N] Builing the Zlib source pt 2/2 ..."
-
-		\bin\mingw32-make.exe install
-		cd ..\..\..\
+	$Zlib = "Zlib"
+	Write-Host "[$NCurrent/$N] Creating Zlib Library:"
+	Write-Host "[$NCurrent/$N] `tMaking Directory: .\$Zlib"
+	$DestZlib = ".\$Zlib"
+	# if folder does not exist...
+	if (!(Test-Path $DestZlib)) {
+		# create it
+		[void](new-item $Zlib -itemType directory)
 	}
-	if($result -eq 1) { 
-		Write-Host "[$NCurrent/$N] Skipping MsysGit Installation" 
-	}
+	cd $Zlib | out-null
+	$ZlibDL="http://zlib.net/zlib128.zip"
+	Write-Host "[$NCurrent/$N] `tDownloading the source: $ZlibDL"		
+	(New-Object System.Net.WebClient).DownloadFile($ZlibDL,"$env:HOMEDRIVE$env:HOMEPATH\Zlib_src.zip")
+
+
+	Write-Host "[$NCurrent/$N] `tExtracting + Building the source..."
+	Move-Item $env:HOMEDRIVE$env:HOMEPATH\Zlib_src.zip .
+	unzip -q Zlib_src.zip
+	del Zlib_src.zip
+	cd zlib-1.2.8
+	mkdir build
+	cd build
+	
+	$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"$env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\A5_Deps`" ..\"
+	Write-Output $t1 | Out-File -encoding ASCII .\zlibcmd.bat -width 200
+	& cmd.exe /k "cls && echo Building the Zlib source pt 1/2 && echo ================================= && echo Please type 'exit', and press enter, when this completes! && echo. && echo Right click, and press enter to continue... && echo (try twice b/c windows is HALF as awesome as Linux) && clip<zlibcmd.bat"
+	
+	Write-Host "[$NCurrent/$N] `tBuiling the Zlib source pt 2/2 ..."
+
+	& C:\MinGW\bin\mingw32-make.exe install
+	cd ..\..\..\
 	####################################
 
 	Write-Host
@@ -186,7 +186,8 @@ $NCurrent += 1
 	####################################
 	#    2) Ogg
 	$Ogg = "Ogg"
-	Write-Host [$NCurrent/$N] Making Directory: .\$Ogg
+	Write-Host "[$NCurrent/$N] Creating Ogg Libary"
+	Write-Host "[$NCurrent/$N] `tMaking Directory: .\$Ogg"
 	$DestOgg = ".\$Ogg"
 	# if folder does not exist...
 	if (!(Test-Path $DestOgg)){
@@ -195,36 +196,45 @@ $NCurrent += 1
 	}
 	cd $Ogg | out-null
 	
-	(New-Object System.Net.WebClient).DownloadFile("http://downloads.xiph.org/releases/ogg/libogg-1.3.1.zip","Ogg_src.zip")
-
-	Write-Host
-
-	Write-Host "[$NCurrent/$N] Extracting + Building the source..."
-	move $env:HOMEDRIVE$env:HOMEPATH\Ogg_src.zip .
+	$OggDL="http://downloads.xiph.org/releases/ogg/libogg-1.3.1.zip"
+	Write-Host "[$NCurrent/$N] `tDownloading: $OggDL ..."
 	
+	(New-Object System.Net.WebClient).DownloadFile($OggDL,"$env:HOMEDRIVE$env:HOMEPATH\Ogg_src.zip")
+
+	
+
+	
+	Move-Item $env:HOMEDRIVE$env:HOMEPATH\Ogg_src.zip .
+	Write-Host "[$NCurrent/$N] `tExtracting the source..."
 	unzip -q Ogg_src.zip
 	del Ogg_src.zip
 	cd libogg-1.3.1
+	Write-Host "[$NCurrent/$N] `tCreating MSYS build shell script..."
 	$t1="#!/bin/sh"
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200
-	$t1="./configure --prefix=`"$HOME/Allegro5.1/A5_Deps`""
+	$t1="cd ~/Allegro5.1/A5_Deps/Ogg/libogg-1.3.1/"
+	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
+	$t1="./configure --prefix=`"``echo ~/``Allegro5.1/A5_Deps`""
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
 	$t1="make"
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
 	$t1="make install"
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
-	
-	$Sh = "profile.d"
-	Write-Host [$NCurrent/$N] Making Directory: .\$Sh
-	$DestSh = ".\.$Sh"
+	$t1="exit"
+	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
+	Write-Host "[$NCurrent/$N] `tBuilding the source with Msys.bat --login ..."
+	$DestSh = "C:\MinGW\msys\1.0\etc\profile.d"
+	Write-Host [$NCurrent/$N] Making Directory: .\$DestSh
 	# if folder does not exist...
 	if (!(Test-Path $DestSh)){
 		# create it
-		[void](new-item $Sh -itemType directory)
+		[void](new-item $DestSh -itemType directory)
 	}
-	move oggcmd.sh .\.profile.d
-	
-	#& msys --login
+	#$file = Get-Item "$DestSh"
+	#$file.Attributes = 'Hidden'
+	Move-Item .\oggcmd.sh "$DestSh\" -force
+	#copy $env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\MinGW\msys\1.0\msys.bat .
+	& C:\MinGW\msys\1.0\msys --login
 	
 	
 	####################################
