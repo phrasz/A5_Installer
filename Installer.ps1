@@ -4,9 +4,13 @@ $NCurrent = 1
 
 $yes = New-Object System.Management.Automation.Host.ChoiceDescription "&Yes",""
 $no = New-Object System.Management.Automation.Host.ChoiceDescription "&No",""
+$b32 = New-Object System.Management.Automation.Host.ChoiceDescription "&32",""
+$b64 = New-Object System.Management.Automation.Host.ChoiceDescription "&64",""
+
 $Enter = New-Object System.Management.Automation.Host.ChoiceDescription "&",""
 
 $choices = [System.Management.Automation.Host.ChoiceDescription[]]($yes,$no)
+$bit = [System.Management.Automation.Host.ChoiceDescription[]]($b32,$b64)
 
 $caption = "     Warning!"
 $message = "     Do you want to proceed?"
@@ -109,6 +113,34 @@ Write-Host
 $NCurrent += 1
 
 ####################################
+# 7zip
+	$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to install 7zip?","",$choices,0)
+	if($result -eq 0){
+		$result = $Host.UI.PromptForChoice("[$NCurrent/$N]      Would you like to install 7zip?","",$bit,0)
+		if($result -eq 0){
+			(New-Object System.Net.WebClient).DownloadFile("http://downloads.sourceforge.net/sevenzip/7z920.msi","$env:HOMEDRIVE$env:HOMEPATH\7zip_Installer.exe")
+		}
+		if($result -eq 1) {
+			(New-Object System.Net.WebClient).DownloadFile("http://downloads.sourceforge.net/sevenzip/7z920-x64.msi","$env:HOMEDRIVE$env:HOMEPATH\7zip_Installer.exe")
+		}
+		Write-Host [$NCurrent/$N] Downloading the Latest 7zip from http://downloads.sourceforge.net/		
+		Write-Host
+		Write-Host "[$NCurrent/$N] Starting the Installer!"
+		Move-Item $env:HOMEDRIVE$env:HOMEPATH\7zip_Installer.exe .
+		& .\7zip_Installer.exe
+			
+		Write-Host "     Press any key to continue ..."
+		$x = $host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+	}
+	if($result -eq 1) { 
+		Write-Host "[$NCurrent/$N] Skipping MsysGit Installation" 
+	}
+####################################
+
+Write-Host
+$NCurrent += 1
+
+####################################
 # Setup for Allegro Dependencies:
 #    0) Create "...\Allegro5.1\A5_Deps" Folder
 #
@@ -124,6 +156,9 @@ $NCurrent += 1
 #    9) FreeType
 
 ####################################
+$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to download and build Allegro's Dependencies?","",$choices,0)
+if($result -eq 0){
+
 #    0) Create "...\Allegro5.1\A5_Deps" Folder
 	$F2 = "A5_Deps"
 	Write-Host [$NCurrent/$N] Making Directory: .\$F2
@@ -139,6 +174,8 @@ $NCurrent += 1
 	Write-Host
 	$NCurrent += 1
 
+$result = $Host.UI.PromptForChoice("[$NCurrent/$N] Would you like to install verified dependency packages??<DEBUGGING>","",$choices,0)
+if($result -eq 0){
 	####################################
 	#	0) ENV VARs 
 		
@@ -170,7 +207,8 @@ $NCurrent += 1
 	mkdir build
 	cd build
 	
-	$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"$env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\A5_Deps`" ..\"
+	#$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"$env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\A5_Deps`" ..\"
+	$t1="cmake -G `"MinGW Makefiles`"  -D CMAKE_INSTALL_PREFIX=`"C:\MinGW`" ..\"
 	Write-Output $t1 | Out-File -encoding ASCII .\zlibcmd.bat -width 200
 	& cmd.exe /k "cls && echo Building the Zlib source pt 1/2 && echo ================================= && echo Please type 'exit', and press enter, when this completes! && echo. && echo Right click, and press enter to continue... && echo (try twice b/c windows is HALF as awesome as Linux) && clip<zlibcmd.bat"
 	
@@ -212,9 +250,10 @@ $NCurrent += 1
 	Write-Host "[$NCurrent/$N] `tCreating MSYS build shell script..."
 	$t1="#!/bin/sh"
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200
-	$t1="cd ~/Allegro5.1/A5_Deps/Ogg/libogg-1.3.1/"
+	$t1="cd ~/Allegro5.1/A5_Deps/Ogg/libogg-1.3./"
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
-	$t1="./configure --prefix=`"``echo ~/``Allegro5.1/A5_Deps`""
+	#$t1="./configure --prefix=`"``echo ~/``Allegro5.1/A5_Deps`""
+	$t1="./configure --prefix=`"/c/mingw`""
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
 	$t1="make"
 	Write-Output $t1 | Out-File -encoding ASCII .\oggcmd.sh -width 200 -append
@@ -235,7 +274,7 @@ $NCurrent += 1
 	Move-Item .\oggcmd.sh "$DestSh\" -force
 	#copy $env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\MinGW\msys\1.0\msys.bat .
 	& C:\MinGW\msys\1.0\msys --login
-	
+
 	
 	####################################
 
@@ -244,13 +283,69 @@ $NCurrent += 1
 
 	####################################
 	#    3) Vorbis
+	$Vorbis = "Vorbis"
+	Write-Host "[$NCurrent/$N] Creating Vorbis Libary"
+	Write-Host "[$NCurrent/$N] `tMaking Directory: .\$Vorbis"
+	$DestVorbis = ".\$Vorbis"
+	# if folder does not exist...
+	if (!(Test-Path $DestVorbis)){
+		# create it
+		[void](new-item $Vorbis -itemType directory)
+	}
+	cd $Vorbis | out-null
+	
+	$VorbisDL="http://downloads.xiph.org/releases/vorbis/libvorbis-1.3.3.zip"
+	Write-Host "[$NCurrent/$N] `tDownloading: $VorbisDL ..."
+	
+	(New-Object System.Net.WebClient).DownloadFile($VorbisDL,"$env:HOMEDRIVE$env:HOMEPATH\Vorbis_src.zip")
+	
+	Move-Item $env:HOMEDRIVE$env:HOMEPATH\Vorbis_src.zip .
+	Write-Host "[$NCurrent/$N] `tExtracting the source..."
+	unzip -q Vorbis_src.zip
+	del Vorbis_src.zip
+	cd libvorbis-1.3.3
+	Write-Host "[$NCurrent/$N] `tCreating MSYS build shell script..."
+	$t1="#!/bin/sh"
+	Write-Output $t1 | Out-File -encoding ASCII .\Vorbiscmd.sh -width 200
+	$t1="cd ~/Allegro5.1/A5_Deps/Vorbis/libvorbis-1.3.3/"
+	Write-Output $t1 | Out-File -encoding ASCII .\Vorbiscmd.sh -width 200 -append
+	#$t1="./configure --prefix=`"``echo ~/``Allegro5.1/A5_Deps`""
+	$t1="./configure --prefix=`"/c/mingw`""
+	Write-Output $t1 | Out-File -encoding ASCII .\Vorbiscmd.sh -width 200 -append
+	$t1="make"
+	Write-Output $t1 | Out-File -encoding ASCII .\Vorbiscmd.sh -width 200 -append
+	$t1="make install"
+	Write-Output $t1 | Out-File -encoding ASCII .\Vorbiscmd.sh -width 200 -append
+	$t1="exit"
+	Write-Output $t1 | Out-File -encoding ASCII .\Vorbiscmd.sh -width 200 -append
+	Write-Host "[$NCurrent/$N] `tBuilding the source with Msys.bat --login ..."
+	$DestSh = "C:\MinGW\msys\1.0\etc\profile.d"
+	Write-Host [$NCurrent/$N] Making Directory: .\$DestSh
+	# if folder does not exist...
+	if (!(Test-Path $DestSh)){
+		# create it
+		[void](new-item $DestSh -itemType directory)
+	}
+	#$file = Get-Item "$DestSh"
+	#$file.Attributes = 'Hidden'
+	Move-Item .\Vorbiscmd.sh "$DestSh\" -force
+	#copy $env:HOMEDRIVE$env:HOMEPATH\Allegro5.1\MinGW\msys\1.0\msys.bat .
+	& C:\MinGW\msys\1.0\msys --login
+	
 	####################################
-
+}
+if($result -eq 1) { 
+	Write-Host "[$NCurrent/$N] Skipping Verified Dependency Packages Installation" 
+}	
 	Write-Host
 	$NCurrent += 1
 
 	####################################
 	#    4) FLAC
+#http://downloads.xiph.org/releases/flac/flac-1.3.0.tar.xz
+
+
+
 	####################################
 
 	Write-Host
@@ -281,11 +376,14 @@ $NCurrent += 1
 	#    8) OpenAL Soft
 	####################################
 
-Write-Host
-$NCurrent += 1
+	Write-Host
+	$NCurrent += 1
 
 	####################################
 	#    9) FreeType
 	####################################
-
+}
+if($result -eq 1) { 
+	Write-Host "[$NCurrent/$N] Skipping Allegro Dependency Installation!" 
+}
 Write-Host Finished Installation!
