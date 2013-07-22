@@ -475,6 +475,7 @@ if($result2 -eq 1){
 
 	####################################
 	#    8) OpenAL Soft
+	# http://connect.creativelabs.com/openal/Downloads/openal-soft-1.13.tbz2
 	####################################
 
 	Write-Host
@@ -482,6 +483,7 @@ if($result2 -eq 1){
 
 	####################################
 	#    9) FreeType
+	# "http://downloads.sourceforge.net/project/freetype/freetype2/2.5.0/ft2501.zip?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Ffreetype%2Ffiles%2F&ts=1374471077&use_mirror=iweb"
 	####################################
 	Write-Host
 	$NCurrent += 1
